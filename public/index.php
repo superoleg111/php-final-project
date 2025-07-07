@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Core\Session;
+Session::start();
+
 use Core\App;
 use Core\Db;
 use Core\Request;
 use Core\Router;
+use App\Repositories\UserRepository;
 
 $app = new App();
 
@@ -16,6 +20,7 @@ $app->setService('db', function () {
 });
 $app->setService('request', fn() => new Request());
 $app->setService('router', fn() => new Router($app));
+$app->setService('userRepository', fn() => new UserRepository($app));
 
 // handle the request
 /** @var Router $router */
