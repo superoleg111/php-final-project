@@ -20,10 +20,12 @@ class Router
             'GET' => [
                 '/' => ['App\\Controllers\\HomeController', 'index'],
                 '/ping' => ['App\\Controllers\\TestController', 'ping'],
+                '/users/me' => ['App\\Controllers\\UserController', 'me'],
                 '/users/list' => ['App\\Controllers\\UserController', 'list'],
             ],
             'POST' => [
                 '/users/login' => ['App\\Controllers\\UserController', 'login'],
+                '/users/logout' => ['App\\Controllers\\UserController', 'logout'],
             ],
         ];
     }
@@ -41,6 +43,11 @@ class Router
             [$controllerName, $action] = $this->routes[$method][$route];
             $controller = new $controllerName($this->app);
             $data = $controller->$action($request);
+
+            if ($data instanceof Response) {
+                return $data;
+            }
+
             return new Response($data);
         }
 
