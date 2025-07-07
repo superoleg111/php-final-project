@@ -1,28 +1,18 @@
 <?php
+namespace Core;
 
-namespace App;
+use Closure;
+use Exception;
 
 class App
 {
-    /**
-     * @var array
-     */
     protected array $services = [];
 
-    /**
-     * @param string $name
-     * @param mixed $service
-     */
     public function setService(string $name, mixed $service): void
     {
         $this->services[$name] = $service;
     }
 
-    /**
-     * @param string $name
-     * @return mixed
-     * @throws Exception
-     */
     public function getService(string $name): mixed
     {
         if (!array_key_exists($name, $this->services)) {
