@@ -2,6 +2,9 @@
 
 namespace Core;
 
+
+use Exception;
+
 class Router
 {
     private array $routes = [];
