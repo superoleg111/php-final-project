@@ -1,0 +1,16 @@
+{
+    "name": "tmw/php-final-project",
+    "autoload": {
+        "psr-4": {
+            "Core\\": "src/Core/",
+            "App\\":  "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "superoleg111",
+            "email": "superoleg111@gmail.com"
+        }
+    ],
+    "require": {}
+}
