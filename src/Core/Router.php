@@ -2,8 +2,10 @@
 
 namespace Core;
 
-
-use Exception;
+use App\Controllers\HomeController;
+use App\Controllers\UserController;
+use Core\Response;
+use Core\Request;
 
 class Router
 {
@@ -16,6 +18,8 @@ class Router
 
         $this->routes = [
             'GET' => [
+                '/' => ['App\\Controllers\\HomeController', 'index'],
+                '/ping' => ['App\\Controllers\\TestController', 'ping'],
                 '/users/list' => ['App\\Controllers\\UserController', 'list'],
             ],
             'POST' => [
@@ -28,6 +32,10 @@ class Router
     {
         $method = $request->getMethod();
         $route = rtrim($request->getRoute(), '/');
+
+        if ($route === '') {
+            $route = '/';
+        }
 
         if (isset($this->routes[$method][$route])) {
             [$controllerName, $action] = $this->routes[$method][$route];
