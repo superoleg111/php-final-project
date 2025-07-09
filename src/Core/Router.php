@@ -22,10 +22,21 @@ class Router
                 '/ping' => ['App\\Controllers\\TestController', 'ping'],
                 '/users/me' => ['App\\Controllers\\UserController', 'me'],
                 '/users/list' => ['App\\Controllers\\UserController', 'list'],
+                '/files/list' => ['App\\Controllers\\FileController', 'list'],
+                '/files/download' => ['App\\Controllers\\FileController', 'download'],
+                '/public/download' => ['App\\Controllers\\FileController', 'publicDownload'],
+                '/files/shared' => ['App\\Controllers\\FileController', 'shared'],
             ],
             'POST' => [
                 '/users/login' => ['App\\Controllers\\UserController', 'login'],
                 '/users/logout' => ['App\\Controllers\\UserController', 'logout'],
+                '/files/add' => ['App\\Controllers\\FileController', 'add'],
+                '/files/rename' => ['App\\Controllers\\FileController', 'rename'],
+                '/files/share' => ['App\\Controllers\\FileController', 'share'],
+                '/files/unshare' => ['App\\Controllers\\FileController', 'unshare'],
+            ],
+            'DELETE' => [
+                '/files/delete' => ['App\\Controllers\\FileController', 'delete'],
             ],
         ];
     }

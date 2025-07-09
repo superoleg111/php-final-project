@@ -57,7 +57,7 @@ class UserController
         if (!$user) {
             return new Response(['error'=>'User not found'],404);
         }
-        // hide password
+
         unset($user['password']);
         return new Response($user);
     }
