@@ -42,4 +42,9 @@ class Request
     {
         return $this->route;
     }
+
+    public function getQuery(string $key, $default = null): ?string
+    {
+        return $_GET[$key] ?? $default;
+    }
 }

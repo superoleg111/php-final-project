@@ -8,6 +8,7 @@ use Core\Session;
 Session::start();
 
 use Core\App;
+use App\Repositories\FileRepository;
 use Core\Db;
 use Core\Request;
 use Core\Router;
@@ -21,6 +22,7 @@ $app->setService('db', function () {
 $app->setService('request', fn() => new Request());
 $app->setService('router', fn() => new Router($app));
 $app->setService('userRepository', fn() => new UserRepository($app));
+$app->setService('fileRepository', fn() => new FileRepository($app));
 
 // handle the request
 /** @var Router $router */
