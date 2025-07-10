@@ -62,8 +62,7 @@ class FileController
         $userId = Session::get('user_id');
         if ($userId) {
             $file = $this->files->findByStoredName($userId, $storedName);
-        }
-        elseif ($token) {
+        } elseif ($token) {
             $file = $this->files->findByToken($token, $storedName);
         } else {
             return new Response(['error' => 'Unauthorized'], 401);
@@ -90,7 +89,7 @@ class FileController
     {
         $data = $request->getBody();
         $oldStored = $data['old'] ?? '';
-        $newName   = $data['new'] ?? '';
+        $newName = $data['new'] ?? '';
 
         if (!$oldStored || !$newName) {
             return new Response(['error' => 'Old and new filenames required'], 422);
@@ -109,9 +108,9 @@ class FileController
         $this->files->rename($oldStored, $newStored);
 
         return new Response([
-            'message'     => 'File renamed successfully',
+            'message' => 'File renamed successfully',
             'stored_name' => $newStored,
-            'original'    => $newName
+            'original' => $newName
         ]);
     }
 
