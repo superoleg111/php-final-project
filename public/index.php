@@ -14,6 +14,7 @@ use Core\Session;
 Session::start();
 
 use Core\App;
+use Core\Auth;
 use Core\Db;
 use Core\Request;
 use Core\Router;
@@ -38,6 +39,7 @@ $app->setService('userRepository', fn() => new UserRepository($app));
 $app->setService('fileRepository', fn() => new FileRepository($app));
 
 /** @var Router $router */
+$app->auth = new Auth($app->getService('userRepository'));
 $router = $app->getService('router');
 $request = $app->getService('request');
 $response = $router->processRequest($request);

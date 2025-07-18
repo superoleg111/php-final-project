@@ -17,7 +17,6 @@ class FileController
         $this->files = $app->getService('fileRepository');
     }
 
-    // GET /files/list
     public function list(Request $request): Response
     {
         $uid = Session::get('user_id');
@@ -28,7 +27,6 @@ class FileController
         return new Response($data);
     }
 
-    // POST /files/add
     public function add(Request $request): Response
     {
         $uid = Session::get('user_id');
