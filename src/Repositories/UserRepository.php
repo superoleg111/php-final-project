@@ -37,4 +37,28 @@ class UserRepository
         $stmt = $this->db->query('SELECT id,name,email FROM users');
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function update(int $id, array $data): bool
+    {
+        $fields = [];
+        $params = [];
+
+        foreach ($data as $key => $value) {
+            $fields[] = "$key = ?";
+            $params[] = $value;
+        }
+
+        $params[] = $id;
+
+        $sql = "UPDATE users SET " . implode(', ', $fields) . " WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+
+        return $stmt->execute($params);
+    }
+
+    public function delete(int $id): bool
+    {
+        $stmt = $this->db->prepare('DELETE FROM users WHERE id = ?');
+        return $stmt->execute([$id]);
+    }
 }

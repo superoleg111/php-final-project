@@ -7,6 +7,7 @@ use Exception;
 
 class App
 {
+    public Auth $auth;
     protected array $services = [];
 
     public function setService(string $name, mixed $service): void
