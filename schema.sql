@@ -34,13 +34,6 @@ CREATE TABLE `files`
     `public_token` varchar(255)          DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-
-INSERT INTO `files` (`id`, `user_id`, `filename`, `stored_name`, `mime_type`, `size`, `created_at`, `public_token`)
-VALUES (1, 1, 'Финальная работа курса «PHP-разработчик. Базовый уровень».pdf',
-        '686e3b943e8c8_Финальная работа курса «PHP-разработчик. Базовый уровень».pdf', 'application/pdf', 102838,
-        '2025-07-09 09:51:16', '46e1b17f2f36465e');
-
-
 CREATE TABLE `file_shares`
 (
     `id`         int(11) NOT NULL,
@@ -56,6 +49,14 @@ CREATE TABLE `users`
     `email`    varchar(255) NOT NULL,
     `password` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+ALTER TABLE `files`
+    ADD COLUMN `directory_id` INT NULL AFTER `user_id`,
+  ADD KEY `directory_id` (`directory_id`),
+  ADD CONSTRAINT `files_ibfk_2`
+    FOREIGN KEY (`directory_id`)
+    REFERENCES `directories` (`id`)
+    ON DELETE SET NULL;
 
 ALTER TABLE `users`
     ADD COLUMN `role` VARCHAR(20) NOT NULL DEFAULT 'user';
@@ -161,5 +162,6 @@ ALTER TABLE `files`
 ALTER TABLE `file_shares`
     ADD CONSTRAINT `file_shares_ibfk_1` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE users ADD UNIQUE(email);
+ALTER TABLE users
+    ADD UNIQUE (email);
 COMMIT;

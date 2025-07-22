@@ -15,6 +15,9 @@ class App
         $this->services[$name] = $service;
     }
 
+    /**
+     * @throws Exception
+     */
     public function getService(string $name): mixed
     {
         if (!array_key_exists($name, $this->services)) {

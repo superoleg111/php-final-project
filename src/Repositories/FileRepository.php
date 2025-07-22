@@ -31,19 +31,29 @@ class FileRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function add(int $userId, string $originalName, string $storedName, string $mime, int $size): int
-    {
+    public function add(
+        int $userId,
+        ?int $directoryId,
+        string $originalName,
+        string $storedName,
+        string $mime,
+        int $size
+    ): int {
         $stmt = $this->db->prepare("
-            INSERT INTO files (user_id, filename, stored_name, mime_type, size)
-            VALUES (:uid, :fn, :sn, :mt, :sz)
-            ");
+        INSERT INTO files
+            (user_id, directory_id, filename, stored_name, mime_type, size)
+        VALUES
+            (:uid, :did, :fn, :sn, :mt, :sz)
+    ");
         $stmt->execute([
             'uid' => $userId,
-            'fn' => $originalName,
-            'sn' => $storedName,
-            'mt' => $mime,
-            'sz' => $size,
+            'did' => $directoryId,
+            'fn'  => $originalName,
+            'sn'  => $storedName,
+            'mt'  => $mime,
+            'sz'  => $size,
         ]);
+
         return (int)$this->db->lastInsertId();
     }
 
@@ -57,7 +67,7 @@ class FileRepository
         $stmt->execute(['new' => $newStoredName, 'old' => $oldStoredName]);
     }
 
-    public function delete(string $storedName): void
+    public function remove(string $storedName): void
     {
         $stmt = $this->db->prepare("
         DELETE FROM files
@@ -114,5 +124,26 @@ class FileRepository
         WHERE f.user_id = :uid AND f.stored_name = :sn
     ");
         return $stmt->execute(['uid' => $userId, 'sn' => $storedName]);
+    }
+
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->db->prepare("
+        SELECT 
+            id,
+            user_id,
+            filename        AS original_name,
+            stored_name,
+            mime_type       AS mime,
+            size,
+            created_at
+        FROM files
+        WHERE id = :id
+        LIMIT 1
+    ");
+        $stmt->execute(['id' => $id]);
+        $file = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $file ?: null;
     }
 }
