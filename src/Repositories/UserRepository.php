@@ -61,4 +61,14 @@ class UserRepository
         $stmt = $this->db->prepare('DELETE FROM users WHERE id = ?');
         return $stmt->execute([$id]);
     }
+
+    public function updateByEmail(string $email, array $data): bool
+    {
+        $user = $this->findByEmail($email);
+        if (! $user) {
+            return false;
+        }
+
+        return $this->update($user['id'], $data);
+    }
 }

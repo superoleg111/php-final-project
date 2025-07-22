@@ -20,6 +20,8 @@ use Core\Request;
 use Core\Router;
 use App\Repositories\UserRepository;
 use App\Repositories\FileRepository;
+use App\Repositories\DirectoryRepository;
+use \App\Repositories\PasswordResetRepository;
 
 $app = new App();
 
@@ -37,6 +39,8 @@ $app->setService('request', fn() => new Request());
 $app->setService('router', fn() => new Router($app));
 $app->setService('userRepository', fn() => new UserRepository($app));
 $app->setService('fileRepository', fn() => new FileRepository($app));
+$app->setService('directoryRepository', fn()=> new DirectoryRepository($app));
+$app->setService('passwordResetRepository', fn()=> new PasswordResetRepository($app));
 
 /** @var Router $router */
 $app->auth = new Auth($app->getService('userRepository'));

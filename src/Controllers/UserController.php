@@ -109,41 +109,58 @@ class UserController
         return new Response(['message' => 'Profile updated']);
     }
 
-    public function adminList(Request $request): Response
+    /**
+     * POST /users/reset_password
+     *   Body: { "email": "user@example.com" }
+     *   Returns { message: "Password reset link sent" }
+     */
+    public function resetPassword(Request $request): Response
     {
-        $currentUser = $this->app->auth->user();
-
-        if (!$currentUser || !$currentUser['is_admin']) {
-            return new Response(['error' => 'Forbidden'], 403);
+        $data = $request->getBody();
+        $email = trim($data['email'] ?? '');
+        if (!$email) {
+            return new Response(['error'=>'Email is required'], 422);
         }
 
-        $users = $this->app->userRepository->findAll();
-        return new Response($users);
+        $user = $this->users->findByEmail($email);
+        if (!$user) {
+            return new Response(['message'=>'If that email exists, a reset link was sent']);
+        }
+
+        $token = bin2hex(random_bytes(16));
+        $this->app->getService('passwordResetRepository')->create($email, $token);
+
+        $link = "http://cloud-storage.local/users/do_reset?email="
+            . urlencode($email) . "&token=$token";
+
+        return new Response(['message'=>'Password reset link', 'reset_link'=>$link]);
     }
 
-    public function adminDelete(Request $request, int $id): Response
+    /**
+     * GET /users/do_reset?email=…&token=…&new_password=…
+     *   Returns { message: "Password updated" } or error
+     */
+    public function doReset(Request $request): Response
     {
-        $currentUser = $this->app->auth->user();
+        $email    = $request->getQuery('email', '');
+        $token    = $request->getQuery('token', '');
+        $newPass  = $request->getQuery('new_password', '');
 
-        if (!$currentUser || !$currentUser['is_admin']) {
-            return new Response(['error' => 'Forbidden'], 403);
+        if (!$email || !$token || !$newPass) {
+            return new Response(['error'=>'Missing parameters'], 422);
         }
 
-        // Prevent admin from deleting themselves
-        if ($currentUser['id'] === $id) {
-            return new Response(['error' => 'You cannot delete yourself'], 400);
+        $pr = $this->app->getService('passwordResetRepository');
+        $row = $pr->find($email, $token);
+        if (!$row) {
+            return new Response(['error'=>'Invalid or expired token'], 400);
         }
 
-        $user = $this->users->findById($id);
-        if (!$user) {
-            return new Response(['error' => 'User not found'], 404);
-        }
+        $hashed = password_hash($newPass, PASSWORD_DEFAULT);
+        $this->users->updateByEmail($email, ['password' => $hashed]);
 
-        $success = $this->users->delete($id);
-        if (!$success) {
-            return new Response(['error' => 'Failed to delete user'], 500);
-        }
+        $pr->delete($email, $token);
 
-        return new Response(['message' => 'User deleted']);
+        return new Response(['message'=>'Password successfully reset']);
     }
 }
