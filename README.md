@@ -34,10 +34,10 @@ mysql -u root -p cloud_storage < backup.sql
 ### Authentication & Profile
 
 ```http
-POST   /users/login           # Log in (returns session cookie)
-POST   /users/logout          # Log out
-GET    /users/me              # Get current user profile
-GET    /reset_password        # Trigger password-reset email link
+POST   /login              # Log in (returns session cookie)
+GET   /logout             # Log out
+GET    /me                 # Get current user profile
+POST   /reset_password     # Trigger password-reset email link
 ```
 
 ### User
