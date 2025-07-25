@@ -35,7 +35,7 @@ mysql -u root -p cloud_storage < backup.sql
 
 ```http
 POST   /login              # Log in (returns session cookie)
-GET   /logout             # Log out
+GET    /logout             # Log out
 GET    /me                 # Get current user profile
 POST   /reset_password     # Trigger password-reset email link
 ```
