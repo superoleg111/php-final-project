@@ -56,6 +56,21 @@ class UserRepository
         return $stmt->execute($params);
     }
 
+    public function create(array $data): int
+    {
+        $stmt = $this->db->prepare(
+            "INSERT INTO users (name,email,password,role)
+         VALUES (:name,:email,:password,:role)"
+        );
+        $stmt->execute([
+            'name'     => $data['name'],
+            'email'    => $data['email'],
+            'password' => $data['password'],
+            'role'     => $data['role'],
+        ]);
+        return (int)$this->db->lastInsertId();
+    }
+
     public function delete(int $id): bool
     {
         $stmt = $this->db->prepare('DELETE FROM users WHERE id = ?');
