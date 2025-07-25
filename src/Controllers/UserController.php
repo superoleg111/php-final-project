@@ -34,6 +34,28 @@ class UserController
         return new Response($user);
     }
 
+    public function register(Request $request): Response
+    {
+        $data = $request->getBody();
+        if (empty($data['email']) || empty($data['password']) || empty($data['role'])) {
+            return new Response(['error'=>'Email, password & role required'], 422);
+        }
+
+        if ($this->users->findByEmail($data['email'])) {
+            return new Response(['error'=>'Email already in use'], 409);
+        }
+
+        $hash = password_hash($data['password'], PASSWORD_DEFAULT);
+        $id = $this->users->create([
+            'name'     => $data['email'],
+            'email'    => $data['email'],
+            'password' => $hash,
+            'role'     => $data['role']
+        ]);
+
+        return new Response(['message'=>'Registered','id'=>$id], 201);
+    }
+
     public function login(Request $request): Response
     {
         $data = $request->getBody();

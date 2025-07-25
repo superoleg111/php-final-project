@@ -24,7 +24,8 @@ class Router
             'GET' => [
 //                '/' => ['App\\Controllers\\HomeController', 'index'],
 //                '/ping' => ['App\\Controllers\\TestController', 'ping'],
-                '/users/me' => ['App\\Controllers\\UserController', 'me'],
+                '/logout' => ['App\\Controllers\\UserController', 'logout'],
+                '/me' => ['App\\Controllers\\UserController', 'me'],
                 '/users/list' => ['App\\Controllers\\UserController', 'list'],
                 '/files/list' => ['App\\Controllers\\FileController', 'list'],
                 '/files/get/{id}' => ['App\\Controllers\\FileController', 'get'],
@@ -34,16 +35,16 @@ class Router
                 '/files/share/{file_id}' => ['App\\Controllers\\FileShareController', 'list'],
                 '/admin/users/list' => ['App\\Controllers\\AdminController', 'list'],
                 '/users/do_reset' => ['App\\Controllers\\UserController', 'doReset'],
-                '/directories/get/{id}'    => ['App\\Controllers\\DirectoryController','get'],
+                '/directories/get/{id}' => ['App\\Controllers\\DirectoryController','get'],
             ],
             'POST' => [
-                '/users/login' => ['App\\Controllers\\UserController', 'login'],
-                '/users/logout' => ['App\\Controllers\\UserController', 'logout'],
+                '/register' => ['App\\Controllers\\UserController','register'],
+                '/login' => ['App\\Controllers\\UserController', 'login'],
                 '/files/add' => ['App\\Controllers\\FileController', 'add'],
                 '/files/share' => ['App\\Controllers\\FileController', 'share'],
                 '/files/unshare' => ['App\\Controllers\\FileController', 'unshare'],
-                '/users/reset_password' => ['App\\Controllers\\UserController', 'resetPassword'],
-                '/directories/add'         => ['App\\Controllers\\DirectoryController','add'],
+                '/reset_password' => ['App\\Controllers\\UserController', 'resetPassword'],
+                '/directories/add' => ['App\\Controllers\\DirectoryController','add'],
             ],
             'DELETE' => [
                 '/files/remove/{id}' => ['App\\Controllers\\FileController', 'removeById'],
@@ -55,7 +56,7 @@ class Router
                 '/files/share/{file_id}/{user_id}' => ['App\\Controllers\\FileShareController', 'share'],
                 '/admin/users/update/{id}' => ['App\\Controllers\\AdminController', 'update'],
                 '/files/rename' => ['App\\Controllers\\FileController', 'rename'],
-                '/directories/rename'      => ['App\\Controllers\\DirectoryController','rename'],
+                '/directories/rename' => ['App\\Controllers\\DirectoryController','rename'],
             ],
         ];
     }
