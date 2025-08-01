@@ -31,12 +31,12 @@ class FileController
     {
         $uid = Session::get('user_id');
         if (!$uid) {
-            return new Response(['error'=>'Unauthorized'], 401);
+            return new Response(['error' => 'Unauthorized'], 401);
         }
 
         $file = $this->files->findById($id);
         if (!$file || $file['user_id'] !== $uid) {
-            return new Response(['error'=>'File not found'], 404);
+            return new Response(['error' => 'File not found'], 404);
         }
 
         unset($file['user_id']);
@@ -50,30 +50,51 @@ class FileController
             return new Response(['error' => 'Unauthorized'], 401);
         }
 
-        if (empty($_FILES['file'])) {
-            return new Response(['error' => 'No file uploaded'], 422);
+        $data = $request->getBody();
+        $isJson = isset($data['content']) && isset($data['name']);
+
+        if ($isJson) {
+            $originalName = $data['name'];
+            $directoryId = $data['directory_id'] ?? null;
+            $content = $data['content'];
+            $storedName = uniqid() . '_' . basename($originalName);
+            $dest = __DIR__ . '/../../storage/' . $storedName;
+
+            if (file_put_contents($dest, $content) === false) {
+                return new Response(['error' => 'Write failed'], 500);
+            }
+
+            $size = strlen($content);
+            $id = $this->files->add($uid, $originalName, $storedName, null, $size, $directoryId);
+
+            return new Response([
+                'message' => 'File stored from content',
+                'id' => $id
+            ]);
         }
 
-        $data = $request->getBody();
-        $directoryId = isset($data['directory_id']) ? (int)$data['directory_id'] : null;
+        if (empty($_FILES['file'])) {
+            return new Response(['error' => 'No file provided'], 422);
+        }
 
         $file = $_FILES['file'];
-        $stored = uniqid() . '_' . basename($file['name']);
-        $dest = __DIR__ . '/../../storage/' . $stored;
+        $originalName = $file['name'];
+        $mime = $file['type'];
+        $size = (int)$file['size'];
+        $directoryId = null;
+        $storedName = uniqid() . '_' . basename($originalName);
+        $dest = __DIR__ . '/../../storage/' . $storedName;
+
         if (!move_uploaded_file($file['tmp_name'], $dest)) {
             return new Response(['error' => 'Upload failed'], 500);
         }
 
-        $id = $this->files->add(
-            $uid,
-            $directoryId,
-            $file['name'],
-            $stored,
-            $file['type'],
-            (int)$file['size']
-        );
+        $id = $this->files->add($uid, $originalName, $storedName, $mime, $size, $directoryId);
 
-        return new Response(['message' => 'File uploaded', 'id' => $id]);
+        return new Response([
+            'message' => 'File uploaded',
+            'id' => $id
+        ]);
     }
 
 //    public function download(Request $request): Response
@@ -115,25 +136,38 @@ class FileController
 
     public function rename(Request $request): Response
     {
-        $data = $request->getBody();
-        $oldStored = $data['old'] ?? '';
-        $newName = $data['new'] ?? '';
-
-        if (!$oldStored || !$newName) {
-            return new Response(['error' => 'Old and new filenames required'], 422);
+        $uid = Session::get('user_id');
+        if (!$uid) {
+            return new Response(['error' => 'Unauthorized'], 401);
         }
 
+        $data = $request->getBody();
+        $fileId = isset($data['id']) ? (int)$data['id'] : null;
+        $newName = trim($data['new_name'] ?? '');
+
+        if (!$fileId || !$newName) {
+            return new Response(['error' => 'id and new_name required'], 422);
+        }
+
+        $file = $this->files->findById($fileId);
+        if (!$file || $file['user_id'] !== $uid) {
+            return new Response(['error' => 'File not found'], 404);
+        }
+
+        $oldStored = $file['stored_name'];
         $oldPath = __DIR__ . '/../../storage/' . $oldStored;
+        if (!file_exists($oldPath)) {
+            return new Response(['error' => 'File missing on server'], 410);
+        }
+
         $newStored = uniqid() . '_' . basename($newName);
         $newPath = __DIR__ . '/../../storage/' . $newStored;
 
-        if (!file_exists($oldPath)) {
-            return new Response(['error' => 'Original file not found'], 404);
+        if (!rename($oldPath, $newPath)) {
+            return new Response(['error' => 'Rename failed'], 500);
         }
 
-        rename($oldPath, $newPath);
-
-        $this->files->rename($oldStored, $newStored);
+        $this->files->rename($fileId, $newStored);
 
         return new Response([
             'message' => 'File renamed successfully',
@@ -141,6 +175,7 @@ class FileController
             'original' => $newName
         ]);
     }
+
 
 //    public function remove(Request $request): Response
 //    {
@@ -179,8 +214,7 @@ class FileController
             unlink($path);
         }
 
-        $this->files->remove($file['stored_name']);
-
+        $this->files->removeById($id);
         return new Response(['message' => 'File removed successfully']);
     }
 

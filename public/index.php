@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Dotenv\Dotenv;
+use PHPMailer\PHPMailer\PHPMailer;
 
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
@@ -32,15 +33,24 @@ $app->setService('db', fn() => new Db(
     $_ENV['DB_PASS'] ?? ''
 ));
 
-//$app->setService('db', function () {
-//    return new Db('localhost', 'cloud_storage', 'root', '');
-//});
+$app->setService('mailer', function () {
+    $m = new PHPMailer(true);
+    $m->isSMTP();
+    $m->Host = $_ENV['MAIL_HOST'];
+    $m->Port = (int)$_ENV['MAIL_PORT'];
+    $m->SMTPAuth = true;
+    $m->Username = $_ENV['MAIL_USERNAME'];
+    $m->Password = $_ENV['MAIL_PASSWORD'];
+    $m->setFrom($_ENV['MAIL_FROM'], $_ENV['MAIL_FROM_NAME']);
+    return $m;
+});
+
 $app->setService('request', fn() => new Request());
 $app->setService('router', fn() => new Router($app));
 $app->setService('userRepository', fn() => new UserRepository($app));
 $app->setService('fileRepository', fn() => new FileRepository($app));
-$app->setService('directoryRepository', fn()=> new DirectoryRepository($app));
-$app->setService('passwordResetRepository', fn()=> new PasswordResetRepository($app));
+$app->setService('directoryRepository', fn() => new DirectoryRepository($app));
+$app->setService('passwordResetRepository', fn() => new PasswordResetRepository($app));
 
 /** @var Router $router */
 $app->auth = new Auth($app->getService('userRepository'));

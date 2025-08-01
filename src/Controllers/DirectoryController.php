@@ -40,7 +40,7 @@ class DirectoryController
 
         $data = $request->getBody();
         $id   = (int)($data['id'] ?? 0);
-        $name = trim($data['name'] ?? '');
+        $name = trim($data['new_name'] ?? '');
 
         if (!$id || !$name) {
             return new Response(['error'=>'id and name required'],422);
@@ -71,11 +71,21 @@ class DirectoryController
     public function delete(Request $request, int $id): Response
     {
         $uid = Session::get('user_id');
-        if (!$uid) return new Response(['error'=>'Unauthorized'],401);
+        if (!$uid) {
+            return new Response(['error' => 'Unauthorized'], 401);
+        }
 
-        $success = $this->dirs->delete($uid, $id);
-        return $success
-            ? new Response(['message'=>'Deleted'])
-            : new Response(['error'=>'Not found or forbidden'],404);
+        $dir = $this->dirs->findById($id);
+        if (!$dir) {
+            return new Response(['error' => 'Directory not found'], 404);
+        }
+
+        if ($dir['user_id'] !== $uid) {
+            return new Response(['error' => 'You do not have permission to delete this directory'], 403);
+        }
+
+        $this->dirs->delete($uid, $id);
+
+        return new Response(['message' => 'Directory deleted successfully']);
     }
 }

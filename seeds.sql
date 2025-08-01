@@ -1,17 +1,12 @@
--- Seed users (with role column)
-INSERT INTO `users` (`name`, `email`, `password`, `role`)
-VALUES ('Alice', 'alice@example.com', '$2y$10$e0NRH.qzWZq0Z2wPX3cKp.O5hM/6xv2k9RZVuU/LPvO6GfE1q9eE6', 'user'),
-       ('Bob', 'bob@example.com', '$2y$10$7sYQ5Hg6hqoP5Zr.EWHUCe.5vOZl0PNpoYoGaCBf4Rtc6biZ8Hqza', 'admin');
+-- passwords:
+-- for admin: admin123
+-- for alice: alice123
+-- for bob: bob123
+INSERT INTO users (id, name, email, password, role)
+VALUES (1, 'Admin', 'admin@example.com', '$2y$10$pM4QYE9n.b5AoaUVfU78f.8cI7r1OLSI8XZ1rEdS1vxv.Wooh9At.', 'admin'),
+       (2, 'Alice', 'alice@example.com', '$2b$12$j17ZTvWUmOPGtHxB6gdTSeNp9Qoo00QUqDIbyxZ8JXLCxAmTnZUrK', 'user'),
+       (3, 'Bob', 'bob@example.com', '$2b$12$OWS4CSpb3W5j0F0qvk6RqeBEr0fvEsGBUI0jfpHvmAU/8p5jTjvnu', 'user');
 
--- 2) One seed file (example.txt) — it will be id=2
-INSERT INTO `files` (`id`, `user_id`, `filename`, `stored_name`, `mime_type`, `size`)
-VALUES (2, 1, 'example.txt', 'seed_example.txt', 'text/plain', 20);
-
--- 3) Public share of the *existing* PDF (id=1) and the new example (id=2)
-INSERT INTO `file_shares` (`file_id`, `token`)
-VALUES (1, 'publictoken123'),
-       (2, 'publictoken456');
-
--- 4) User‐to‐user access: Bob (user_id=2) gave Alice (user_id=1) access to example.txt (file_id=2)
-INSERT INTO `file_user_access` (`file_id`, `user_id`)
-VALUES (2, 1);
+INSERT INTO directories (id, user_id, name, parent_id, created_at)
+VALUES (1, 2, 'Alice Root', NULL, NOW()),
+       (2, 3, 'Bob Root', NULL, NOW());

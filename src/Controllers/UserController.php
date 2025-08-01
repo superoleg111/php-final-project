@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers;
 
 use Core\App;
@@ -6,28 +7,43 @@ use Core\Request;
 use Core\Response;
 use Core\Session;
 use App\Repositories\UserRepository;
+use App\Repositories\PasswordResetRepository;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 class UserController
 {
     private App $app;
     private UserRepository $users;
+    private PasswordResetRepository $passwordResetRepo;
 
     public function __construct(App $app)
     {
         $this->app = $app;
         $this->users = $app->getService('userRepository');
+        $this->passwordResetRepo = $app->getService('passwordResetRepository');
     }
 
     public function list(Request $request): Response
     {
+        $currentUser = $this->app->auth->user();
+        if (!$currentUser) {
+            return new Response(['error' => 'Unauthorized'], 401);
+        }
+
         $all = $this->users->findAll();
         return new Response($all);
     }
 
     public function get(Request $request, int $id): Response
     {
+        $currentUser = $this->app->auth->user();
+        if (!$currentUser) {
+            return new Response(['error' => 'Unauthorized'], 401);
+        }
+
         $user = $this->users->findById($id);
-        if (! $user) {
+        if (!$user) {
             return new Response(['error' => 'User not found'], 404);
         }
         unset($user['password']);
@@ -38,22 +54,22 @@ class UserController
     {
         $data = $request->getBody();
         if (empty($data['email']) || empty($data['password']) || empty($data['role'])) {
-            return new Response(['error'=>'Email, password & role required'], 422);
+            return new Response(['error' => 'Email, password & role required'], 422);
         }
 
         if ($this->users->findByEmail($data['email'])) {
-            return new Response(['error'=>'Email already in use'], 409);
+            return new Response(['error' => 'Email already in use'], 409);
         }
 
         $hash = password_hash($data['password'], PASSWORD_DEFAULT);
         $id = $this->users->create([
-            'name'     => $data['email'],
-            'email'    => $data['email'],
+            'name' => $data['email'],
+            'email' => $data['email'],
             'password' => $hash,
-            'role'     => $data['role']
+            'role' => $data['role']
         ]);
 
-        return new Response(['message'=>'Registered','id'=>$id], 201);
+        return new Response(['message' => 'Registered', 'id' => $id], 201);
     }
 
     public function login(Request $request): Response
@@ -71,7 +87,7 @@ class UserController
         Session::set('user_id', $user['id']);
         return new Response([
             'message' => 'Login successful',
-            'user'    => ['id'=>$user['id'],'name'=>$user['name'],'email'=>$user['email']],
+            'user' => ['id' => $user['id'], 'name' => $user['name'], 'email' => $user['email']],
         ]);
     }
 
@@ -85,11 +101,11 @@ class UserController
     {
         $id = Session::get('user_id');
         if (!$id) {
-            return new Response(['error'=>'Unauthorized'],401);
+            return new Response(['error' => 'Unauthorized'], 401);
         }
         $user = $this->users->findById($id);
         if (!$user) {
-            return new Response(['error'=>'User not found'],404);
+            return new Response(['error' => 'User not found'], 404);
         }
 
         unset($user['password']);
@@ -131,58 +147,70 @@ class UserController
         return new Response(['message' => 'Profile updated']);
     }
 
-    /**
-     * POST /users/reset_password
-     *   Body: { "email": "user@example.com" }
-     *   Returns { message: "Password reset link sent" }
-     */
     public function resetPassword(Request $request): Response
     {
         $data = $request->getBody();
-        $email = trim($data['email'] ?? '');
-        if (!$email) {
-            return new Response(['error'=>'Email is required'], 422);
+        $email = $data['email'] ?? '';
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return new Response(['error' => 'Valid email required'], 422);
         }
 
         $user = $this->users->findByEmail($email);
         if (!$user) {
-            return new Response(['message'=>'If that email exists, a reset link was sent']);
+            return new Response(['message' => 'If that email exists, you’ll receive a reset link'], 200);
         }
 
         $token = bin2hex(random_bytes(16));
-        $this->app->getService('passwordResetRepository')->create($email, $token);
+        $this->passwordResetRepo->create($email, $token);
 
-        $link = "http://cloud-storage.local/users/do_reset?email="
-            . urlencode($email) . "&token=$token";
+        $link = sprintf(
+            "%s/reset_password?email=%s&token=%s",
+            rtrim($_ENV['APP_URL'], '/'),
+            urlencode($email),
+            $token
+        );
 
-        return new Response(['message'=>'Password reset link', 'reset_link'=>$link]);
-    }
-
-    /**
-     * GET /users/do_reset?email=…&token=…&new_password=…
-     *   Returns { message: "Password updated" } or error
-     */
-    public function doReset(Request $request): Response
-    {
-        $email    = $request->getQuery('email', '');
-        $token    = $request->getQuery('token', '');
-        $newPass  = $request->getQuery('new_password', '');
-
-        if (!$email || !$token || !$newPass) {
-            return new Response(['error'=>'Missing parameters'], 422);
+        /** @var PHPMailer $mailer */
+        $mailer = $this->app->getService('mailer');
+        try {
+            $mailer->addAddress($email, $user['name']);
+            $mailer->isHTML(true);
+            $mailer->Subject = 'Password Reset Request';
+            $mailer->Body = "Click <a href=\"{$link}\">here</a> to reset your password.";
+            $mailer->send();
+        } catch (Exception $e) {
+            return new Response(['error' => 'Failed to send email'], 500);
         }
 
-        $pr = $this->app->getService('passwordResetRepository');
-        $row = $pr->find($email, $token);
-        if (!$row) {
-            return new Response(['error'=>'Invalid or expired token'], 400);
-        }
-
-        $hashed = password_hash($newPass, PASSWORD_DEFAULT);
-        $this->users->updateByEmail($email, ['password' => $hashed]);
-
-        $pr->delete($email, $token);
-
-        return new Response(['message'=>'Password successfully reset']);
+        return new Response(['message' => 'Reset link sent if that email exists']);
     }
-}
+
+        /**
+         * GET /users/do_reset?email=…&token=…&new_password=…
+         *   Returns { message: "Password updated" } or error
+         */
+        public function doReset(Request $request): Response
+        {
+            $email = $request->getQuery('email', '');
+            $token = $request->getQuery('token', '');
+            $newPass = $request->getQuery('new_password', '');
+
+            if (!$email || !$token || !$newPass) {
+                return new Response(['error' => 'Missing parameters'], 422);
+            }
+
+            $pr = $this->app->getService('passwordResetRepository');
+            $row = $pr->find($email, $token);
+            if (!$row) {
+                return new Response(['error' => 'Invalid or expired token'], 400);
+            }
+
+            $hashed = password_hash($newPass, PASSWORD_DEFAULT);
+            $this->users->updateByEmail($email, ['password' => $hashed]);
+
+            $pr->delete($email, $token);
+
+            return new Response(['message' => 'Password successfully changed']);
+        }
+    }

@@ -17,24 +17,32 @@ class FileShareController
         $this->app = $app;
     }
 
-    public function share($file_id, $user_id)
+    public function share(int $file_id, int $user_id): Response
     {
-        $db = $this->app->getService('db')->getConnection();
+        $db   = $this->app->getService('db')->getConnection();
+        $file = $this->app->getService('fileRepository')->findById($file_id);
+        $user = $this->app->getService('userRepository')->findById($user_id);
 
-        $stmt = $db->prepare("SELECT * FROM file_user_access WHERE file_id = ? AND user_id = ?");
+        if (!$file) {
+            return new Response(['error' => 'File not found'], 404);
+        }
+        if (!$user) {
+            return new Response(['error' => 'User not found'], 404);
+        }
+
+        $stmt = $db->prepare("SELECT 1 FROM file_user_access WHERE file_id = ? AND user_id = ?");
         $stmt->execute([$file_id, $user_id]);
-
         if ($stmt->fetch()) {
-            return new Response(['error' => 'File already shared with this user'], 409);
+            return new Response(['error' => 'Already shared with this user'], 409);
         }
 
         $stmt = $db->prepare("INSERT INTO file_user_access (file_id, user_id) VALUES (?, ?)");
         $stmt->execute([$file_id, $user_id]);
 
-        return new Response(['message' => 'File access granted'], 201);
+        return new Response(['message' => 'Access granted'], 201);
     }
 
-    public function list($file_id)
+    public function list($file_id): Response
     {
         $db = $this->app->getService('db')->getConnection();
 
@@ -50,7 +58,7 @@ class FileShareController
         return new Response($sharedUsers, 200);
     }
 
-    public function revoke($file_id, $user_id)
+    public function revoke($file_id, $user_id): Response
     {
         $db = $this->app->getService('db')->getConnection();
 

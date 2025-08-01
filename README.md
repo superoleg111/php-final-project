@@ -16,14 +16,18 @@ cd php-final-project
 # 2. Install PHP dependencies
 composer install
 
-# 3. Create the database in MySQL or MariaDB
+# 3. Copy .env template and configure environment variables
+cp .env.example .env
+# (edit .env if needed, e.g., DB credentials)
+
+# 4. Create the database in MySQL or MariaDB
 CREATE DATABASE cloud_storage CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-# 4. Import the schema (use backup.sql)
-mysql -u root -p cloud_storage < backup.sql
-# Note: schema.sql is broken, do not use it.
+# 5. Import schema and seeds (in CMD)
+mysql -u root -p cloud_storage < schema.sql
+mysql -u root -p cloud_storage < seeds.sql  
 
-# 5. If using XAMPP, move this project to htdocs/
+# 6. If using XAMPP, move this project to htdocs/
 # Then access it via: http://localhost/php-final-project/public
 ```
 
@@ -63,7 +67,7 @@ DELETE /admin/users/delete/{id}      # Delete a user (not self)
 GET    /files/list            # List your files
 GET    /files/get/{id}        # Get file metadata
 POST   /files/add             # Upload a new file
-PUT    /files/rename          # Rename a file (JSON: old & new names)
+PUT    /files/rename          # Rename a file (JSON: id, new name)
 DELETE /files/remove/{id}     # Delete a file by ID
 ```
 
