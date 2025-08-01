@@ -37,15 +37,20 @@ class DirectoryRepository
         return $stmt->execute(['nm'=>$name,'id'=>$id,'uid'=>$uid]);
     }
 
-    public function findById(int $uid, int $id): ?array
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->db->prepare("SELECT * FROM directories WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function delete(int $uid, int $id): bool
     {
         $stmt = $this->db->prepare("
-            SELECT id,name,parent_id,created_at
-            FROM directories
+            DELETE FROM directories
             WHERE id = :id AND user_id = :uid
         ");
-        $stmt->execute(['id'=>$id,'uid'=>$uid]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        return $stmt->execute(['id'=>$id,'uid'=>$uid]);
     }
 
     public function listChildren(int $uid, int $parent): array
@@ -82,12 +87,12 @@ class DirectoryRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function delete(int $uid, int $id): bool
-    {
-        $stmt = $this->db->prepare("
-            DELETE FROM directories
-            WHERE id = :id AND user_id = :uid
-        ");
-        return $stmt->execute(['id'=>$id,'uid'=>$uid]);
-    }
+//    public function delete(int $uid, int $id): bool
+//    {
+//        $stmt = $this->db->prepare("
+//            DELETE FROM directories
+//            WHERE id = :id AND user_id = :uid
+//        ");
+//        return $stmt->execute(['id'=>$id,'uid'=>$uid]);
+//    }
 }
