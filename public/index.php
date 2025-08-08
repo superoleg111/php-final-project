@@ -39,6 +39,9 @@ $app->setService('mailer', function () {
     $m->Host = $_ENV['MAIL_HOST'];
     $m->Port = (int)$_ENV['MAIL_PORT'];
     $m->SMTPAuth = true;
+    $m->SMTPSecure = $_ENV['MAIL_ENCRYPTION'] === 'SMTPS'
+        ? PHPMailer::ENCRYPTION_SMTPS
+        : PHPMailer::ENCRYPTION_STARTTLS;
     $m->Username = $_ENV['MAIL_USERNAME'];
     $m->Password = $_ENV['MAIL_PASSWORD'];
     $m->setFrom($_ENV['MAIL_FROM'], $_ENV['MAIL_FROM_NAME']);

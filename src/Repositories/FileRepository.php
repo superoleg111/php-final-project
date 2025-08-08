@@ -51,14 +51,18 @@ class FileRepository
         return (int)$this->db->lastInsertId();
     }
 
-    public function rename(int $id, string $newStoredName): bool
+    public function rename(int $id, string $newStoredName, string $newName): bool
     {
         $stmt = $this->db->prepare("
         UPDATE files
         SET stored_name = :sn
         WHERE id = :id
     ");
-        return $stmt->execute(['sn' => $newStoredName, 'id' => $id]);
+        return $stmt->execute([
+            'sn' => $newStoredName,
+            'fn' => $newName,
+            'id' => $id
+        ]);
     }
 
     public function removeById(int $id): bool

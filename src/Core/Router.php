@@ -34,7 +34,7 @@ class Router
                 '/files/shared' => ['App\\Controllers\\FileController', 'shared'],
                 '/files/share/{file_id}' => ['App\\Controllers\\FileShareController', 'list'],
                 '/admin/users/list' => ['App\\Controllers\\AdminController', 'list'],
-                '/users/do_reset' => ['App\\Controllers\\UserController', 'doReset'],
+                '/do_reset' => ['App\\Controllers\\UserController', 'doReset'],
                 '/directories/get/{id}' => ['App\\Controllers\\DirectoryController','get'],
             ],
             'POST' => [

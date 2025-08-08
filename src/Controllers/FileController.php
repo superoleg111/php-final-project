@@ -11,9 +11,11 @@ use App\Repositories\FileRepository;
 class FileController
 {
     private FileRepository $files;
+    private App $app;
 
     public function __construct(App $app)
     {
+        $this->app = $app;
         $this->files = $app->getService('fileRepository');
     }
 
@@ -62,6 +64,14 @@ class FileController
 
             if (file_put_contents($dest, $content) === false) {
                 return new Response(['error' => 'Write failed'], 500);
+            }
+
+            if ($directoryId !== null) {
+                $dirRepo = $this->app->getService('directoryRepository');
+                $directory = $dirRepo->findById($uid, $directoryId);
+                if (!$directory) {
+                    return new Response(['error' => 'Directory not found'], 404);
+                }
             }
 
             $size = strlen($content);

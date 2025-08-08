@@ -38,18 +38,18 @@ mysql -u root -p cloud_storage < seeds.sql
 ### Authentication & Profile
 
 ```http
-POST   /login              # Log in (returns session cookie)
+POST   /login              # Log in (JSON: email, password)
 GET    /logout             # Log out
 GET    /me                 # Get current user profile
-POST   /reset_password     # Trigger password-reset email link
+POST   /reset_password     # Trigger password-reset email link (JSON: email). More info on how to complete the password reset is in email body
 ```
 
-### User
+### User (Must be logged in to use this API)
 
 ```http
-GET    /users/list            # List all users (id, name, email)
+GET    /users/list            # List all users
 GET    /users/get/{id}        # Get one user’s details
-PUT    /users/update          # Update own profile
+PUT    /users/update          # Update own profile (JSON: name(optional), email(optional), password(optional) (but at least one))
 ```
 
 ### Admin (requires role='admin')
@@ -57,30 +57,30 @@ PUT    /users/update          # Update own profile
 ```http
 GET    /admin/users/list             # List all users
 GET    /admin/users/get/{id}         # Get user by id
-PUT    /admin/users/update/{id}      # Update any user’s data
+PUT    /admin/users/update/{id}      # Update any user’s data (JSON: name(optional), email(optional), password(optional) (but at least one))
 DELETE /admin/users/delete/{id}      # Delete a user (not self)
 ```
 
-### Files
+### Files (Must be logged in to use this API)
 
 ```http
 GET    /files/list            # List your files
 GET    /files/get/{id}        # Get file metadata
-POST   /files/add             # Upload a new file
-PUT    /files/rename          # Rename a file (JSON: id, new name)
+POST   /files/add             # Upload a new file (METHOD 1 - JSON: name, content, directory_id(optional); METHOD 2 - use multipart/form-data instead of JSON)
+PUT    /files/rename          # Rename a file (JSON: id, new_name)
 DELETE /files/remove/{id}     # Delete a file by ID
 ```
 
-### Directories
+### Directories (Must be logged in to use this API)
 
 ```http
-POST   /directories/add             # Create a directory (JSON: name, parent_id)
+POST   /directories/add             # Create a directory (JSON: name, parent_id(optional))
 PUT    /directories/rename          # Rename a directory (JSON: id, new_name)
 GET    /directories/get/{id}        # List folder contents
 DELETE /directories/delete/{id}     # Delete a directory (and subfolders)
 ```
 
-### Sharing
+### Sharing (Must be logged in to use this API)
 
 ```http
 GET    /files/share/{file_id}               # List users the file is shared with

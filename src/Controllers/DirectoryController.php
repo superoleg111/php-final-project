@@ -57,7 +57,7 @@ class DirectoryController
         $uid = Session::get('user_id');
         if (!$uid) return new Response(['error'=>'Unauthorized'],401);
 
-        $dir = $this->dirs->findById($uid, $id);
+        $dir = $this->dirs->findById($id, $uid);
         if (!$dir) {
             return new Response(['error'=>'Not found'],404);
         }
