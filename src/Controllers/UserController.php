@@ -165,7 +165,7 @@ class UserController
         $this->passwordResetRepo->create($email, $token);
 
         $link = sprintf(
-            "%s/reset_password?email=%s&token=%s",
+            "%s/do_reset?email=%s&token=%s",
             rtrim($_ENV['APP_URL'], '/'),
             urlencode($email),
             $token
@@ -177,7 +177,16 @@ class UserController
             $mailer->addAddress($email, $user['name']);
             $mailer->isHTML(true);
             $mailer->Subject = 'Password Reset Request';
-            $mailer->Body = "Click <a href=\"{$link}\">here</a> to reset your password.";
+            $mailer->Body = "
+    You requested a password reset.<br><br>
+    Link:<br>
+    <a href=\"{$link}\">{$link}</a><br><br>
+    <strong>Important:</strong> To complete the reset, you must manually add
+    <code>&new_password=your_new_password</code> to the end of the link.
+    <br><br>
+    Example:<br>
+    <code>{$link}&new_password=12345</code>
+";
             $mailer->send();
         } catch (Exception $e) {
             return new Response(['error' => 'Failed to send email'], 500);
@@ -186,31 +195,31 @@ class UserController
         return new Response(['message' => 'Reset link sent if that email exists']);
     }
 
-        /**
-         * GET /users/do_reset?email=…&token=…&new_password=…
-         *   Returns { message: "Password updated" } or error
-         */
-        public function doReset(Request $request): Response
-        {
-            $email = $request->getQuery('email', '');
-            $token = $request->getQuery('token', '');
-            $newPass = $request->getQuery('new_password', '');
+    /**
+     * GET /users/do_reset?email=…&token=…&new_password=…
+     *   Returns { message: "Password updated" } or error
+     */
+    public function doReset(Request $request): Response
+    {
+        $email = $request->getQuery('email', '');
+        $token = $request->getQuery('token', '');
+        $newPass = $request->getQuery('new_password', '');
 
-            if (!$email || !$token || !$newPass) {
-                return new Response(['error' => 'Missing parameters'], 422);
-            }
-
-            $pr = $this->app->getService('passwordResetRepository');
-            $row = $pr->find($email, $token);
-            if (!$row) {
-                return new Response(['error' => 'Invalid or expired token'], 400);
-            }
-
-            $hashed = password_hash($newPass, PASSWORD_DEFAULT);
-            $this->users->updateByEmail($email, ['password' => $hashed]);
-
-            $pr->delete($email, $token);
-
-            return new Response(['message' => 'Password successfully changed']);
+        if (!$email || !$token || !$newPass) {
+            return new Response(['error' => 'Missing parameters'], 422);
         }
+
+        $pr = $this->app->getService('passwordResetRepository');
+        $row = $pr->find($email, $token);
+        if (!$row) {
+            return new Response(['error' => 'Invalid or expired token'], 400);
+        }
+
+        $hashed = password_hash($newPass, PASSWORD_DEFAULT);
+        $this->users->updateByEmail($email, ['password' => $hashed]);
+
+        $pr->delete($email, $token);
+
+        return new Response(['message' => 'Password successfully changed']);
     }
+}

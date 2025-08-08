@@ -34,13 +34,14 @@ class DirectoryRepository
               SET name = :nm
             WHERE id = :id AND user_id = :uid
         ");
-        return $stmt->execute(['nm'=>$name,'id'=>$id,'uid'=>$uid]);
+        $stmt->execute(['nm'=>$name, 'id'=>$id, 'uid'=>$uid]);
+        return $stmt->rowCount() > 0;
     }
 
-    public function findById(int $id): ?array
+    public function findById(int $id, int $uid): ?array
     {
-        $stmt = $this->db->prepare("SELECT * FROM directories WHERE id = ?");
-        $stmt->execute([$id]);
+        $stmt = $this->db->prepare("SELECT * FROM directories WHERE id = :id AND user_id = :uid");
+        $stmt->execute(['id' => $id, 'uid' => $uid]);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
