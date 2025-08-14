@@ -55,12 +55,18 @@ class FileController
         $data = $request->getBody();
         $isJson = isset($data['content']) && isset($data['name']);
 
+        $storagePath = __DIR__ . '/../../storage';
+
+        if (!is_dir($storagePath)) {
+            mkdir($storagePath, 0777, true);
+        }
+
         if ($isJson) {
             $originalName = $data['name'];
             $directoryId = $data['directory_id'] ?? null;
             $content = $data['content'];
             $storedName = uniqid() . '_' . basename($originalName);
-            $dest = __DIR__ . '/../../storage/' . $storedName;
+            $dest = $storagePath . '/' . $storedName;
 
             if (file_put_contents($dest, $content) === false) {
                 return new Response(['error' => 'Write failed'], 500);
@@ -93,7 +99,7 @@ class FileController
         $size = (int)$file['size'];
         $directoryId = null;
         $storedName = uniqid() . '_' . basename($originalName);
-        $dest = __DIR__ . '/../../storage/' . $storedName;
+        $dest = $storagePath . '/' . $storedName;
 
         if (!move_uploaded_file($file['tmp_name'], $dest)) {
             return new Response(['error' => 'Upload failed'], 500);
@@ -106,43 +112,6 @@ class FileController
             'id' => $id
         ]);
     }
-
-//    public function download(Request $request): Response
-//    {
-//        $token = $request->getQuery('token');
-//        $storedName = $request->getQuery('name');
-//
-//        if (!$storedName) {
-//            return new Response(['error' => 'Missing file name'], 422);
-//        }
-//
-//        $file = null;
-//
-//        $userId = Session::get('user_id');
-//        if ($userId) {
-//            $file = $this->files->findByStoredName($userId, $storedName);
-//        } elseif ($token) {
-//            $file = $this->files->findByToken($token, $storedName);
-//        } else {
-//            return new Response(['error' => 'Unauthorized'], 401);
-//        }
-//
-//        if (!$file) {
-//            return new Response(['error' => 'File not found'], 404);
-//        }
-//
-//        $path = __DIR__ . '/../../storage/' . $storedName;
-//        if (!file_exists($path)) {
-//            return new Response(['error' => 'File missing on server'], 410);
-//        }
-//
-//        header('Content-Type: ' . $file['mime_type']);
-//        header('Content-Disposition: attachment; filename="' . $file['filename'] . '"');
-//        header('Content-Length: ' . $file['size']);
-//        readfile($path);
-//        exit;
-//    }
-
 
     public function rename(Request $request): Response
     {
@@ -160,8 +129,12 @@ class FileController
         }
 
         $file = $this->files->findById($fileId);
-        if (!$file || $file['user_id'] !== $uid) {
+        if (!$file) {
             return new Response(['error' => 'File not found'], 404);
+        }
+
+        if ($file['user_id'] !== $uid) {
+            return new Response(['error' => 'Forbidden'], 403);
         }
 
         $oldStored = $file['stored_name'];
@@ -177,35 +150,14 @@ class FileController
             return new Response(['error' => 'Rename failed'], 500);
         }
 
-        $this->files->rename($fileId, $newStored);
+        $this->files->rename($fileId, $newStored, $newName);
 
         return new Response([
             'message' => 'File renamed successfully',
             'stored_name' => $newStored,
-            'original' => $newName
+            'original_name' => $newName
         ]);
     }
-
-
-//    public function remove(Request $request): Response
-//    {
-//        $data = $request->getBody();
-//        $stored = $data['name'] ?? '';
-//
-//        if (!$stored) {
-//            return new Response(['error' => 'Filename required'], 422);
-//        }
-//
-//        $path = __DIR__ . '/../../storage/' . $stored;
-//        if (!file_exists($path)) {
-//            return new Response(['error' => 'File not found'], 404);
-//        }
-//
-//        unlink($path);
-//        $this->files->remove($stored);
-//
-//        return new Response(['message' => 'File removed successfully']);
-//    }
 
     public function removeById(Request $request, int $id): Response
     {
@@ -227,42 +179,6 @@ class FileController
         $this->files->removeById($id);
         return new Response(['message' => 'File removed successfully']);
     }
-
-//    public function share(Request $request): Response
-//    {
-//        $uid = Session::get('user_id');
-//        if (!$uid) return new Response(['error' => 'Unauthorized'], 401);
-//
-//        $data = $request->getBody();
-//        $stored = $data['name'] ?? '';
-//        if (!$stored) return new Response(['error' => 'Filename required'], 422);
-//
-//        $token = bin2hex(random_bytes(8));
-//        $this->files->setPublicToken($stored, $token);
-//
-//        return new Response([
-//            'message' => 'Public link generated',
-//            'url' => 'http://cloud-storage.local/public/download?token=' . $token,
-//        ]);
-//    }
-
-//    public function publicDownload(Request $request): Response
-//    {
-//        $token = $request->getQuery('token');
-//        if (!$token) return new Response(['error' => 'Missing token'], 422);
-//
-//        $file = $this->files->findByPublicToken($token);
-//        if (!$file) return new Response(['error' => 'Invalid token'], 404);
-//
-//        $path = __DIR__ . '/../../storage/' . $file['stored_name'];
-//        if (!file_exists($path)) return new Response(['error' => 'File not found'], 410);
-//
-//        header('Content-Type: ' . $file['mime_type']);
-//        header('Content-Disposition: attachment; filename="' . $file['filename'] . '"');
-//        header('Content-Length: ' . $file['size']);
-//        readfile($path);
-//        exit;
-//    }
 
     public function shared(Request $request): Response
     {

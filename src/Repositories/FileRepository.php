@@ -55,7 +55,7 @@ class FileRepository
     {
         $stmt = $this->db->prepare("
         UPDATE files
-        SET stored_name = :sn
+        SET stored_name = :sn, filename = :fn
         WHERE id = :id
     ");
         return $stmt->execute([
@@ -70,43 +70,6 @@ class FileRepository
         $stmt = $this->db->prepare("DELETE FROM files WHERE id = ?");
         return $stmt->execute([$id]);
     }
-
-//    public function setPublicToken(string $storedName, string $token): void
-//    {
-//        $stmt = $this->db->prepare("UPDATE files SET public_token = :token WHERE stored_name = :sn");
-//        $stmt->execute(['token' => $token, 'sn' => $storedName]);
-//    }
-
-//    public function findByPublicToken(string $token): ?array
-//    {
-//        $stmt = $this->db->prepare("SELECT * FROM files WHERE public_token = :token");
-//        $stmt->execute(['token' => $token]);
-//        $file = $stmt->fetch(PDO::FETCH_ASSOC);
-//        return $file ?: null;
-//    }
-
-//    public function listSharedByUser(int $userId): array
-//    {
-//        $stmt = $this->db->prepare("
-//        SELECT f.id, f.filename, f.mime_type, f.size, f.created_at, s.token
-//        FROM files f
-//        JOIN file_shares s ON f.id = s.file_id
-//        WHERE f.user_id = :uid
-//        ORDER BY f.created_at DESC
-//    ");
-//        $stmt->execute(['uid' => $userId]);
-//        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-//    }
-
-//    public function revokeShare(int $userId, string $storedName): bool
-//    {
-//        $stmt = $this->db->prepare("
-//        DELETE fs FROM file_shares fs
-//        JOIN files f ON fs.file_id = f.id
-//        WHERE f.user_id = :uid AND f.stored_name = :sn
-//    ");
-//        return $stmt->execute(['uid' => $userId, 'sn' => $storedName]);
-//    }
 
     public function findById(int $id): ?array
     {
