@@ -87,13 +87,4 @@ class DirectoryRepository
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-//    public function delete(int $uid, int $id): bool
-//    {
-//        $stmt = $this->db->prepare("
-//            DELETE FROM directories
-//            WHERE id = :id AND user_id = :uid
-//        ");
-//        return $stmt->execute(['id'=>$id,'uid'=>$uid]);
-//    }
 }

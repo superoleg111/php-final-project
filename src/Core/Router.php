@@ -22,15 +22,11 @@ class Router
 
         $this->routes = [
             'GET' => [
-//                '/' => ['App\\Controllers\\HomeController', 'index'],
-//                '/ping' => ['App\\Controllers\\TestController', 'ping'],
                 '/logout' => ['App\\Controllers\\UserController', 'logout'],
                 '/me' => ['App\\Controllers\\UserController', 'me'],
                 '/users/list' => ['App\\Controllers\\UserController', 'list'],
                 '/files/list' => ['App\\Controllers\\FileController', 'list'],
                 '/files/get/{id}' => ['App\\Controllers\\FileController', 'get'],
-//                '/files/download' => ['App\\Controllers\\FileController', 'download'],
-//                '/public/download' => ['App\\Controllers\\FileController', 'publicDownload'],
                 '/files/shared' => ['App\\Controllers\\FileController', 'shared'],
                 '/files/share/{file_id}' => ['App\\Controllers\\FileShareController', 'list'],
                 '/admin/users/list' => ['App\\Controllers\\AdminController', 'list'],
